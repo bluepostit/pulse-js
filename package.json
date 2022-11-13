@@ -4,9 +4,12 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "dev": "ts-node src/index.ts",
-    "test": "jest",
-    "test:watch": "jest --watch"
+    "dev": "dotenv -e .env.development -- ts-node src/index.ts",
+    "migrate": "dotenv -e .env.development -- npx prisma migrate dev --name postgres-init",
+    "test:watch": "dotenv -e .env.test -- jest --watch",
+    "docker:up": "sudo docker-compose up -d",
+    "docker:down": "sudo docker-compose down",
+    "test": "npm run docker:up && dotenv -e .env.test -- npx prisma migrate deploy && dotenv -e .env.test -- jest"
   },
   "author": "",
   "license": "ISC",
@@ -25,6 +28,7 @@
     "@types/node": "^18.11.9",
     "@types/supertest": "^2.0.12",
     "babel-jest": "^29.3.1",
+    "dotenv-cli": "^6.0.0",
     "jest": "^29.2.2",
     "prisma": "^4.6.1",
     "supertest": "^6.3.1",

@@ -27,4 +27,13 @@ describe('Registration', () => {
       .send({ email: 'test@test.test', password: '123456' })
       .expect(200)
   })
+
+  it('should create a user when email and password are given', async () => {
+    const response = await request(app)
+      .post('/api/auth/register')
+      .set('Content-Type', 'application/json')
+      .send({ email: 'test@test.test', password: '123456' })
+    expect(response.statusCode).toBe(200)
+    // now query db to see if a record was created
+  })
 })
