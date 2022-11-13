@@ -1,25 +1,31 @@
 const request = require('supertest')
+const bcrypt = require('bcrypt')
 const { PrismaClient } = require('@prisma/client')
 const prisma = new PrismaClient()
 
 const app = require('../src/app')
+let { SALT_ROUNDS = 10 } = process.env
+SALT_ROUNDS = parseInt(SALT_ROUNDS)
+
+const USER_EMAIL = 'test@test.test'
+const USER_PASSWORD = '123sail?999'
+const USER_PASSWORD_HASH = '$2b$10$Cep7g3y73V7gHyQQgRMPBezhaiez5BJrEqzhbtiTbuaWm9vn9RYNO'
+
+const cleanup = async () => {
+  const deleteUsers = prisma.user.deleteMany()
+
+  await prisma.$transaction([
+    deleteUsers
+  ])
+
+  await prisma.$disconnect()
+}
 
 describe('Registration', () => {
-
-  const cleanup = async () => {
-    const deleteUsers = prisma.user.deleteMany()
-
-    await prisma.$transaction([
-      deleteUsers
-    ])
-
-    await prisma.$disconnect()
-  }
-
   beforeEach(cleanup)
   afterAll(cleanup)
 
-  it('should throw an error when no email is given', async () => {
+  it('should return an error when no email is given', async () => {
     const response = await request(app)
       .post('/api/auth/register')
       .set('Content-Type', 'application/json')
@@ -28,7 +34,7 @@ describe('Registration', () => {
     expect(response.body.message).toMatch(/email/)
   })
 
-  it('should throw an error when no password is given', async () => {
+  it('should return an error when no password is given', async () => {
     const response = await request(app)
       .post('/api/auth/register')
       .set('Content-Type', 'application/json')
@@ -37,10 +43,26 @@ describe('Registration', () => {
     expect(response.body.message).toMatch(/password/)
   })
 
+  it('should return an error when an existing user has the given email', async () => {
+    await prisma.user.create({
+      data: {
+        email: USER_EMAIL,
+        password: USER_PASSWORD
+      }
+    })
+
+    const response = await request(app)
+      .post('/api/auth/register')
+      .set('Content-Type', 'application/json')
+      .send({ email: USER_EMAIL, password: USER_PASSWORD })
+    expect(response.statusCode).toBe(400)
+    expect(response.body.message).toMatch(/email/i)
+  })
+
   it('should return OK when email and password are given', () => {
     return request(app)
       .post('/api/auth/register')
-      .send({ email: 'test@test.test', password: '123456' })
+      .send({ email: USER_EMAIL, password: USER_PASSWORD })
       .expect(200)
   })
 
@@ -56,4 +78,64 @@ describe('Registration', () => {
     expect(users.length).toBe(1)
     expect(users[0].email).toBe('test@test.test')
   })
+})
+
+describe('Sign in', () => {
+  beforeEach(async () => {
+    await cleanup()
+    const password = USER_PASSWORD_HASH
+    const user = await prisma.user.create({
+      data: {
+        email: USER_EMAIL,
+        password
+      }
+    })
+  })
+
+  afterAll(cleanup)
+
+  it('should return an error when no email is given', async () => {
+    const response = await request(app)
+      .post('/api/auth/login')
+      .set('Content-Type', 'application/json')
+      .send({ password: USER_PASSWORD })
+    expect(response.statusCode).toBe(400)
+    expect(response.body.message).toMatch(/email/)
+  })
+
+  it('should return an error when no password is given', async () => {
+    const response = await request(app)
+      .post('/api/auth/login')
+      .set('Content-Type', 'application/json')
+      .send({ email: USER_EMAIL })
+    expect(response.statusCode).toBe(400)
+    expect(response.body.message).toMatch(/password/)
+  })
+
+  it('should return an error when email isn\'t found', async () => {
+    const response = await request(app)
+      .post('/api/auth/login')
+      .set('Content-Type', 'application/json')
+      .send({ email: `abc+${USER_EMAIL}`, password: USER_PASSWORD })
+    expect(response.statusCode).toBe(400)
+    expect(response.body.message).toMatch(/check/i)
+  })
+
+  it('should return an error when password is wrong', async () => {
+    const response = await request(app)
+      .post('/api/auth/login')
+      .set('Content-Type', 'application/json')
+      .send({ email: USER_EMAIL, password: `abc+${USER_PASSWORD}` })
+    expect(response.statusCode).toBe(400)
+    expect(response.body.message).toMatch(/check/i)
+  })
+
+  it('should return OK when credentials are correct', async () => {
+    const response = await request(app)
+      .post('/api/auth/login')
+      .set('Content-Type', 'application/json')
+      .send({ email: USER_EMAIL, password: USER_PASSWORD })
+    expect(response.statusCode).toBe(200)
+  })
+
 })
