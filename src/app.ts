@@ -1,7 +1,6 @@
 import dotenv from 'dotenv'
 dotenv.config()
 import express from 'express'
-import { nextTick } from 'process'
 import auth from './routes/auth'
 
 const { DEBUG } = process.env
