@@ -1,8 +1,24 @@
 const request = require('supertest')
+const { PrismaClient } = require('@prisma/client')
+const prisma = new PrismaClient()
 
 const app = require('../src/app')
 
 describe('Registration', () => {
+
+  const cleanup = async () => {
+    const deleteUsers = prisma.user.deleteMany()
+
+    await prisma.$transaction([
+      deleteUsers
+    ])
+
+    await prisma.$disconnect()
+  }
+
+  beforeEach(cleanup)
+  afterAll(cleanup)
+
   it('should throw an error when no email is given', async () => {
     const response = await request(app)
       .post('/api/auth/register')
@@ -34,6 +50,10 @@ describe('Registration', () => {
       .set('Content-Type', 'application/json')
       .send({ email: 'test@test.test', password: '123456' })
     expect(response.statusCode).toBe(200)
+
     // now query db to see if a record was created
+    const users = await prisma.user.findMany()
+    expect(users.length).toBe(1)
+    expect(users[0].email).toBe('test@test.test')
   })
 })

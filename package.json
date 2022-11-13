@@ -6,10 +6,13 @@
   "scripts": {
     "dev": "dotenv -e .env.development -- ts-node src/index.ts",
     "migrate": "dotenv -e .env.development -- npx prisma migrate dev --name postgres-init",
-    "test:watch": "dotenv -e .env.test -- jest --watch",
     "docker:up": "sudo docker-compose up -d",
     "docker:down": "sudo docker-compose down",
-    "test": "npm run docker:up && dotenv -e .env.test -- npx prisma migrate deploy && dotenv -e .env.test -- jest"
+    "test:migrate": "dotenv -e .env.test -- npx prisma migrate deploy",
+    "test:jest": "dotenv -e .env.test -- jest",
+    "test:jest:watch": "dotenv -e .env.test -- jest --watch",
+    "test:watch": "npm run docker:up && npm run test:migrate && npm run test:jest:watch",
+    "test": "npm run docker:up && npm run test:migrate && npm run test:jest"
   },
   "author": "",
   "license": "ISC",
