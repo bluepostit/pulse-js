@@ -1,10 +1,12 @@
 import express from 'express'
 import type { RequestHandler } from 'express'
-import { Prisma, PrismaClient } from '@prisma/client'
+import { Prisma, PrismaClient, User } from '@prisma/client'
 import bcrypt from 'bcrypt'
+import jwt, { Secret } from 'jsonwebtoken'
 
 const router = express.Router()
 const prisma = new PrismaClient()
+const TOKEN_SECRET: Secret = process.env.TOKEN_SECRET || ''
 const SALT_ROUNDS_BASE = process.env.SALT_ROUNDS || '10'
 const SALT_ROUNDS = parseInt(SALT_ROUNDS_BASE)
 
@@ -34,6 +36,15 @@ const validateAuthPost: RequestHandler = (req: RequestWithJsonBody, res, next) =
   }
 
   next()
+}
+
+const generateToken = (user: User) => {
+  const payload = {
+    id: user.id
+  }
+  return jwt.sign(payload, TOKEN_SECRET, {
+    expiresIn: '14d'
+  })
 }
 
 router.post('/register', validateAuthPost, async (req: RequestWithJsonBody, res) => {
@@ -84,12 +95,11 @@ router.post('/login', validateAuthPost, async (req: RequestWithJsonBody, res) =>
         message: 'Please check your sign-in details'
       })
     }
+    const token = generateToken(user)
     return res
       .status(200)
       .send({
-        user: {
-          id: user.id
-        }
+        token
       })
   } catch (e) {
     console.log(e)

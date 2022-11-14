@@ -138,4 +138,13 @@ describe('Sign in', () => {
     expect(response.statusCode).toBe(200)
   })
 
+  it('should return a token when credentials are correct', async () => {
+    const response = await request(app)
+      .post('/api/auth/login')
+      .set('Content-Type', 'application/json')
+      .send({ email: USER_EMAIL, password: USER_PASSWORD })
+    expect(response.statusCode).toBe(200)
+    expect(response.body.token).toBeTruthy()
+    expect(response.body.token.length).toBeGreaterThanOrEqual(20)
+  })
 })
