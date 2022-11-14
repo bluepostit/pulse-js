@@ -6,7 +6,7 @@ const USER_PASSWORD = '123sail?999'
 const USER_PASSWORD_HASH =
   '$2b$10$Cep7g3y73V7gHyQQgRMPBezhaiez5BJrEqzhbtiTbuaWm9vn9RYNO'
 
-import app from '../src/app'
+import app from '../../src/app'
 const prisma = new PrismaClient()
 
 const cleanup = async () => {
