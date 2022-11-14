@@ -8,7 +8,7 @@ app.use(express.json())
 
 if (DEBUG) {
   app.use((req, _res, next) => {
-    console.log(`${(new Date()).toLocaleString()} ${req.method} ${req.url}`)
+    console.log(`${new Date().toLocaleString()} ${req.method} ${req.url}`)
     next()
   })
 }

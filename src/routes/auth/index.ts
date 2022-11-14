@@ -1,5 +1,4 @@
-import express from 'express'
-import type { RequestHandler } from 'express'
+import express, { Request, RequestHandler } from 'express'
 import { Prisma, PrismaClient, User } from '@prisma/client'
 import bcrypt from 'bcrypt'
 import jwt, { Secret } from 'jsonwebtoken'
@@ -10,29 +9,29 @@ const TOKEN_SECRET: Secret = process.env.TOKEN_SECRET || ''
 const SALT_ROUNDS_BASE = process.env.SALT_ROUNDS || '10'
 const SALT_ROUNDS = parseInt(SALT_ROUNDS_BASE)
 
-type RequestWithJsonBody = {
+interface RequestWithJsonBody extends Request {
   body: {
-    email: string,
+    email: string
     password: string
   }
 }
 
-const validateAuthPost: RequestHandler = (req: RequestWithJsonBody, res, next) => {
+const validateAuthPost: RequestHandler = (
+  req: RequestWithJsonBody,
+  res,
+  next
+) => {
   const { email, password } = req.body
   if (!email) {
-    return res
-      .status(400)
-      .send({
-        message: 'Missing email'
-      });
+    return res.status(400).send({
+      message: 'Missing email',
+    })
   }
 
   if (!password) {
-    return res
-      .status(400)
-      .send({
-        message: 'Missing password'
-      })
+    return res.status(400).send({
+      message: 'Missing password',
+    })
   }
 
   next()
@@ -40,73 +39,74 @@ const validateAuthPost: RequestHandler = (req: RequestWithJsonBody, res, next) =
 
 const generateToken = (user: User) => {
   const payload = {
-    id: user.id
+    id: user.id,
   }
   return jwt.sign(payload, TOKEN_SECRET, {
-    expiresIn: '14d'
+    expiresIn: '14d',
   })
 }
 
-router.post('/register', validateAuthPost, async (req: RequestWithJsonBody, res) => {
-  const { email, password: plainTextPassword } = req.body
-  const hashedPassword = await bcrypt.hash(plainTextPassword, SALT_ROUNDS)
-  try {
-    const user = await prisma.user.create({
-      data: {
-        email,
-        password: hashedPassword
-      }
-    })
-    res.sendStatus(200)
-  } catch (e) {
-    if (e instanceof Prisma.PrismaClientKnownRequestError) {
-      if (e.code === 'P2002') { // unique constraint violation
-        return res
-          .status(400)
-          .send({
-            message: "Can't create a user with this email"
+router.post(
+  '/register',
+  validateAuthPost,
+  async (req: RequestWithJsonBody, res) => {
+    const { email, password: plainTextPassword } = req.body
+    const hashedPassword = await bcrypt.hash(plainTextPassword, SALT_ROUNDS)
+    try {
+      await prisma.user.create({
+        data: {
+          email,
+          password: hashedPassword,
+        },
+      })
+      res.sendStatus(200)
+    } catch (e) {
+      if (e instanceof Prisma.PrismaClientKnownRequestError) {
+        if (e.code === 'P2002') {
+          // unique constraint violation
+          return res.status(400).send({
+            message: "Can't create a user with this email",
           })
+        }
       }
+      throw e
     }
-    throw e
   }
-})
+)
 
-router.post('/login', validateAuthPost, async (req: RequestWithJsonBody, res) => {
-  const { email, password } = req.body
-  try {
-    const user = await prisma.user.findUnique({
-      where: {
-        email
-      }
-    })
-    if (!user) {
-      return res
-        .status(400)
-        .send({
-          message: 'Please check your sign-in details'
+router.post(
+  '/login',
+  validateAuthPost,
+  async (req: RequestWithJsonBody, res) => {
+    const { email, password } = req.body
+    try {
+      const user = await prisma.user.findUnique({
+        where: {
+          email,
+        },
+      })
+      if (!user) {
+        console.log('No user found with given email')
+        return res.status(400).send({
+          message: 'Please check your sign-in details',
         })
-    }
-    const result = await bcrypt.compare(password, user.password)
-    if (!result) {
-      return res
-      .status(400)
-      .send({
-        message: 'Please check your sign-in details'
+      }
+      const result = await bcrypt.compare(password, user.password)
+      if (!result) {
+        console.log('Incorrect password given')
+        return res.status(400).send({
+          message: 'Please check your sign-in details',
+        })
+      }
+      const token = generateToken(user)
+      return res.status(200).send({
+        token,
       })
+    } catch (e) {
+      console.log(e)
+      res.status(500).send('There was a problem signing you in')
     }
-    const token = generateToken(user)
-    return res
-      .status(200)
-      .send({
-        token
-      })
-  } catch (e) {
-    console.log(e)
-    res
-      .status(500)
-      .send("There was a problem signing you in")
   }
-})
+)
 
 export default router
