@@ -1,5 +1,4 @@
-import express from 'express'
-import type { RequestHandler } from 'express'
+import express, { Request, RequestHandler } from 'express'
 import { Prisma, PrismaClient, User } from '@prisma/client'
 import bcrypt from 'bcrypt'
 import jwt, { Secret } from 'jsonwebtoken'
@@ -10,7 +9,7 @@ const TOKEN_SECRET: Secret = process.env.TOKEN_SECRET || ''
 const SALT_ROUNDS_BASE = process.env.SALT_ROUNDS || '10'
 const SALT_ROUNDS = parseInt(SALT_ROUNDS_BASE)
 
-type RequestWithJsonBody = {
+interface RequestWithJsonBody extends Request{
   body: {
     email: string,
     password: string
@@ -51,7 +50,7 @@ router.post('/register', validateAuthPost, async (req: RequestWithJsonBody, res)
   const { email, password: plainTextPassword } = req.body
   const hashedPassword = await bcrypt.hash(plainTextPassword, SALT_ROUNDS)
   try {
-    const user = await prisma.user.create({
+    await prisma.user.create({
       data: {
         email,
         password: hashedPassword
@@ -81,6 +80,7 @@ router.post('/login', validateAuthPost, async (req: RequestWithJsonBody, res) =>
       }
     })
     if (!user) {
+      console.log('No user found with given email')
       return res
         .status(400)
         .send({
@@ -89,6 +89,7 @@ router.post('/login', validateAuthPost, async (req: RequestWithJsonBody, res) =>
     }
     const result = await bcrypt.compare(password, user.password)
     if (!result) {
+      console.log('Incorrect password given')
       return res
       .status(400)
       .send({

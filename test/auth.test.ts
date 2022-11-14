@@ -81,7 +81,7 @@ describe('Sign in', () => {
   beforeEach(async () => {
     await cleanup()
     const password = USER_PASSWORD_HASH
-    const user = await prisma.user.create({
+    await prisma.user.create({
       data: {
         email: USER_EMAIL,
         password
