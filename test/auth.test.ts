@@ -1,15 +1,12 @@
-const request = require('supertest')
-const bcrypt = require('bcrypt')
-const { PrismaClient } = require('@prisma/client')
-const prisma = new PrismaClient()
-
-const app = require('../src/app')
-let { SALT_ROUNDS = 10 } = process.env
-SALT_ROUNDS = parseInt(SALT_ROUNDS)
+import request from 'supertest'
+import { PrismaClient } from '@prisma/client'
 
 const USER_EMAIL = 'test@test.test'
 const USER_PASSWORD = '123sail?999'
 const USER_PASSWORD_HASH = '$2b$10$Cep7g3y73V7gHyQQgRMPBezhaiez5BJrEqzhbtiTbuaWm9vn9RYNO'
+
+import app from '../src/app'
+const prisma = new PrismaClient()
 
 const cleanup = async () => {
   const deleteUsers = prisma.user.deleteMany()
