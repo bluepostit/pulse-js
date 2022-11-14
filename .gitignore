@@ -1,2 +1,5 @@
-.env
+.env*
 node_modules
+*.db
+*.db-journal
+.vscode
