@@ -3,7 +3,8 @@ import { PrismaClient } from '@prisma/client'
 
 const USER_EMAIL = 'test@test.test'
 const USER_PASSWORD = '123sail?999'
-const USER_PASSWORD_HASH = '$2b$10$Cep7g3y73V7gHyQQgRMPBezhaiez5BJrEqzhbtiTbuaWm9vn9RYNO'
+const USER_PASSWORD_HASH =
+  '$2b$10$Cep7g3y73V7gHyQQgRMPBezhaiez5BJrEqzhbtiTbuaWm9vn9RYNO'
 
 import app from '../src/app'
 const prisma = new PrismaClient()
@@ -11,9 +12,7 @@ const prisma = new PrismaClient()
 const cleanup = async () => {
   const deleteUsers = prisma.user.deleteMany()
 
-  await prisma.$transaction([
-    deleteUsers
-  ])
+  await prisma.$transaction([deleteUsers])
 
   await prisma.$disconnect()
 }
@@ -44,8 +43,8 @@ describe('Registration', () => {
     await prisma.user.create({
       data: {
         email: USER_EMAIL,
-        password: USER_PASSWORD
-      }
+        password: USER_PASSWORD,
+      },
     })
 
     const response = await request(app)
@@ -84,8 +83,8 @@ describe('Sign in', () => {
     await prisma.user.create({
       data: {
         email: USER_EMAIL,
-        password
-      }
+        password,
+      },
     })
   })
 
@@ -109,7 +108,7 @@ describe('Sign in', () => {
     expect(response.body.message).toMatch(/password/)
   })
 
-  it('should return an error when email isn\'t found', async () => {
+  it("should return an error when email isn't found", async () => {
     const response = await request(app)
       .post('/api/auth/login')
       .set('Content-Type', 'application/json')
