@@ -11,6 +11,8 @@ if (DEBUG) {
     console.log(`${(new Date()).toLocaleString()} ${req.method} ${req.url}`)
     next()
   })
+
+
 }
 
 app.use('/api/auth', auth)
