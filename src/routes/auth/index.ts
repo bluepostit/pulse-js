@@ -2,12 +2,12 @@ import express, { Request, RequestHandler } from 'express'
 import { Prisma, PrismaClient, User } from '@prisma/client'
 import bcrypt from 'bcrypt'
 import jwt, { Secret } from 'jsonwebtoken'
+import env from '../../env'
 
 const router = express.Router()
 const prisma = new PrismaClient()
-const TOKEN_SECRET: Secret = process.env.TOKEN_SECRET || ''
-const SALT_ROUNDS_BASE = process.env.SALT_ROUNDS || '10'
-const SALT_ROUNDS = parseInt(SALT_ROUNDS_BASE)
+const TOKEN_SECRET: Secret = env.TOKEN_SECRET
+const SALT_ROUNDS = env.SALT_ROUNDS
 
 interface RequestWithJsonBody extends Request {
   body: {

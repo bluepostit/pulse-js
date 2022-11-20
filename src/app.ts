@@ -1,7 +1,8 @@
 import express from 'express'
 import auth from './routes/auth'
+import env from './env'
 
-const { DEBUG } = process.env
+const { DEBUG } = env
 
 const app = express()
 app.use(express.json())
