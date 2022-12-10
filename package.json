@@ -10,7 +10,7 @@
     "dev:generate": "dotenv -e .env.development -- npx prisma generate",
     "docker:up": "sudo docker-compose up -d",
     "docker:down": "sudo docker-compose down",
-    "test:migrate": "dotenv -e .env.test -- npx prisma migrate deploy",
+    "test:migrate": "dotenv -e .env.test -- npx prisma migrate dev",
     "test:jest": "dotenv -e .env.test -- jest",
     "test:jest:watch": "dotenv -e .env.test -- jest --watch",
     "test:watch": "npm run docker:up && npm run test:migrate && npm run test:jest:watch",
