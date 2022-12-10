@@ -13,7 +13,6 @@ const cleanup = async () => {
   const deleteUsers = prisma.user.deleteMany()
 
   await prisma.$transaction([deleteUsers])
-
   await prisma.$disconnect()
 }
 
@@ -55,8 +54,8 @@ describe('Registration', () => {
     expect(response.body.message).toMatch(/email/i)
   })
 
-  it('should return OK when email and password are given', () => {
-    return request(app)
+  it('should return OK when email and password are given', async () => {
+    await request(app)
       .post('/api/auth/register')
       .send({ email: USER_EMAIL, password: USER_PASSWORD })
       .expect(200)
@@ -79,16 +78,15 @@ describe('Registration', () => {
 describe('Sign in', () => {
   beforeEach(async () => {
     await cleanup()
-    const password = USER_PASSWORD_HASH
     await prisma.user.create({
       data: {
         email: USER_EMAIL,
-        password,
+        password: USER_PASSWORD_HASH,
       },
     })
   })
 
-  afterAll(cleanup)
+  afterAll(async () => await cleanup())
 
   it('should return an error when no email is given', async () => {
     const response = await request(app)
