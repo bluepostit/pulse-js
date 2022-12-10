@@ -1,5 +1,6 @@
 import express from 'express'
 import auth from './routes/auth'
+import pulses from './routes/pulses'
 import env from './env'
 
 const { DEBUG } = env
@@ -15,6 +16,7 @@ if (DEBUG) {
 }
 
 app.use('/api/auth', auth)
+app.use('/api/pulses', pulses)
 
 export default app
 

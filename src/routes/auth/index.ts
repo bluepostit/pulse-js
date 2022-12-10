@@ -7,7 +7,7 @@ import env from '../../env'
 const router = express.Router()
 const prisma = new PrismaClient()
 const TOKEN_SECRET: Secret = env.TOKEN_SECRET
-const SALT_ROUNDS = env.SALT_ROUNDS
+const { DEBUG, SALT_ROUNDS } = env
 
 interface RequestWithJsonBody extends Request {
   body: {
@@ -86,14 +86,14 @@ router.post(
         },
       })
       if (!user) {
-        console.log('No user found with given email')
+        DEBUG && console.log('No user found with given email')
         return res.status(400).send({
           message: 'Please check your sign-in details',
         })
       }
       const result = await bcrypt.compare(password, user.password)
       if (!result) {
-        console.log('Incorrect password given')
+        DEBUG && console.log('Incorrect password given')
         return res.status(400).send({
           message: 'Please check your sign-in details',
         })

@@ -18,8 +18,8 @@ const cleanup = async () => {
 }
 
 describe('Registration', () => {
-  beforeEach(cleanup)
-  afterAll(cleanup)
+  beforeEach(async () => await cleanup())
+  afterAll(async () => await cleanup())
 
   it('should return an error when no email is given', async () => {
     const response = await request(app)

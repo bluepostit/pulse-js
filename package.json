@@ -6,7 +6,8 @@
   "scripts": {
     "prepare": "husky install",
     "dev": "dotenv -e .env.development -- ts-node src/index.ts",
-    "migrate": "dotenv -e .env.development -- npx prisma migrate dev --name postgres-init",
+    "dev:migrate": "dotenv -e .env.development -- npx prisma migrate dev --name",
+    "dev:generate": "dotenv -e .env.development -- npx prisma generate",
     "docker:up": "sudo docker-compose up -d",
     "docker:down": "sudo docker-compose down",
     "test:migrate": "dotenv -e .env.test -- npx prisma migrate deploy",
