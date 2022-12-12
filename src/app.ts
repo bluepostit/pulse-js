@@ -1,4 +1,10 @@
 import express from 'express'
+
+declare module 'express-serve-static-core' {
+  interface Request {
+    userId?: number
+  }
+}
 import auth from './routes/auth'
 import pulses from './routes/pulses'
 import env from './env'

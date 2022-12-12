@@ -1,7 +1,17 @@
 import { Request, RequestHandler } from 'express'
-import jwt, { Secret } from 'jsonwebtoken'
+import jwt, { Secret, JwtPayload } from 'jsonwebtoken'
+import { User } from '@prisma/client'
 import env from '../env'
 const TOKEN_SECRET: Secret = env.TOKEN_SECRET
+
+const generateToken = (user: User) => {
+  const payload = {
+    id: user.id,
+  }
+  return jwt.sign(payload, TOKEN_SECRET, {
+    expiresIn: '14d',
+  })
+}
 
 const validateAuthToken: RequestHandler = (req, res, next) => {
   const tokenHeader = req.header('authorization')
@@ -18,9 +28,10 @@ const validateAuthToken: RequestHandler = (req, res, next) => {
         message: 'Token not verified',
       })
     }
-    console.log(user)
+    const userObject = user as JwtPayload
+    req.userId = userObject.id
     next()
   })
 }
 
-export { validateAuthToken }
+export { generateToken, validateAuthToken }

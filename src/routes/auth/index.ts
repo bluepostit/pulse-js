@@ -1,12 +1,11 @@
 import express, { Request, RequestHandler } from 'express'
-import { Prisma, PrismaClient, User } from '@prisma/client'
+import { Prisma, PrismaClient } from '@prisma/client'
 import bcrypt from 'bcrypt'
-import jwt, { Secret } from 'jsonwebtoken'
 import env from '../../env'
+import { generateToken } from '../../middleware/authentication'
 
 const router = express.Router()
 const prisma = new PrismaClient()
-const TOKEN_SECRET: Secret = env.TOKEN_SECRET
 const { DEBUG, SALT_ROUNDS } = env
 
 interface RequestWithJsonBody extends Request {
@@ -35,15 +34,6 @@ const validateAuthPost: RequestHandler = (
   }
 
   next()
-}
-
-const generateToken = (user: User) => {
-  const payload = {
-    id: user.id,
-  }
-  return jwt.sign(payload, TOKEN_SECRET, {
-    expiresIn: '14d',
-  })
 }
 
 router.post(

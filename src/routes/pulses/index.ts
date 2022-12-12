@@ -1,6 +1,6 @@
 import express, { Request, RequestHandler } from 'express'
 import { PrismaClient } from '@prisma/client'
-import jwt, { Secret } from 'jsonwebtoken'
+import { validateAuthToken } from '../../middleware/authentication'
 
 const router = express.Router()
 const prisma = new PrismaClient()
@@ -18,6 +18,18 @@ router.get('/:userId', async (req, res) => {
   })
   res.json({
     pulses: user?.pulses || [],
+  })
+})
+
+router.post('/', validateAuthToken, async (req, res) => {
+  const pulse = await prisma.pulse.create({
+    data: {
+      userId: req.userId as number,
+    },
+  })
+  res.status(201).json({
+    message: 'Pulse created',
+    pulse,
   })
 })
 
