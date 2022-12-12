@@ -16,6 +16,19 @@ interface RequestWithJsonBody extends Request {
   }
 }
 
+prisma.$use(async (params, next) => {
+  if (params.model === 'User' && ['create', 'update'].includes(params.action)) {
+    console.log(params.args.data)
+    const password = params.args.data.password
+    if (password) {
+      const hashedPassword = await bcrypt.hash(password, SALT_ROUNDS)
+      params.args.data.password = hashedPassword
+    }
+    console.log({ data: params.args.data })
+    return await next(params)
+  }
+})
+
 const validateAuthPost: RequestHandler = (
   req: RequestWithJsonBody,
   res,
@@ -50,15 +63,15 @@ router.post(
   '/register',
   validateAuthPost,
   async (req: RequestWithJsonBody, res) => {
-    const { email, password: plainTextPassword } = req.body
-    const hashedPassword = await bcrypt.hash(plainTextPassword, SALT_ROUNDS)
+    const { email, password } = req.body
     try {
-      await prisma.user.create({
+      const user = await prisma.user.create({
         data: {
           email,
-          password: hashedPassword,
+          password,
         },
       })
+      console.log(user)
       res.sendStatus(200)
     } catch (e) {
       if (e instanceof Prisma.PrismaClientKnownRequestError) {
@@ -80,12 +93,15 @@ router.post(
   async (req: RequestWithJsonBody, res) => {
     const { email, password } = req.body
     try {
+      console.log('login info to try: ', { email, password })
       const user = await prisma.user.findUnique({
         where: {
           email,
         },
       })
       if (!user) {
+        const allUsers = await prisma.user.findMany()
+        console.log({ allUsers })
         DEBUG && console.log('No user found with given email')
         return res.status(400).send({
           message: 'Please check your sign-in details',
