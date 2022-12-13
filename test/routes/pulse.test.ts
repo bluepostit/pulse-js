@@ -154,5 +154,47 @@ describe('Pulse', () => {
       expect(response.body.message).toMatch(/pulse/i)
       expect(response.body.pulse).toHaveProperty('id')
     })
+
+    it('should create a pulse with the given data', async () => {
+      const user = await createUser()
+      mockJwtTokenValidationTokenSuccess(user)
+
+      const url = `/api/pulses`
+      const response = await request(app)
+        .post(url)
+        .set('Content-Type', 'application/json')
+        .set('Authorization', 'fake token')
+        .send({
+          status: 'IN_DANGER',
+          reachable: false,
+        })
+      expect(response.statusCode).toBe(201) // created
+      expect(response.body.message).toMatch(/pulse/i)
+      expect(response.body).toHaveProperty('pulse')
+      const pulse = response.body.pulse
+      expect(pulse).toHaveProperty('id')
+      expect(pulse.status).toBe('IN_DANGER')
+      expect(pulse.reachable).toBe(false)
+    })
+
+    it('should return an error when an invalid status is given', async () => {
+      const user = await createUser()
+      mockJwtTokenValidationTokenSuccess(user)
+
+      const url = `/api/pulses`
+      const response = await request(app)
+        .post(url)
+        .set('Content-Type', 'application/json')
+        .set('Authorization', 'fake token')
+        .send({
+          status: 'DEFINITELY_NOT_REAL',
+          reachable: false,
+        })
+      expect(response.statusCode).toBe(400)
+      expect(response.body.message).toMatch(/status/i)
+
+      const pulseCount = await prisma.pulse.count()
+      expect(pulseCount).toBe(0)
+    })
   })
 })

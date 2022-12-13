@@ -11,6 +11,17 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+enum PulseStatus {
+  SAFE
+  SAFE_BUT_SITUATION_ONGOING
+  IN_DANGER
+  IN_SERIOUS_DANGER
+  PROPERTY_LOSS
+  INJURED
+  NEED_MEDICAL_ASSISTANCE
+  SERIOUSLY_INJURED
+}
+
 model User {
   id       Int     @id @default(autoincrement())
   email    String  @unique
@@ -19,8 +30,11 @@ model User {
 }
 
 model Pulse {
-  id        Int      @id @default(autoincrement())
-  user      User     @relation(fields: [userId], references: [id])
+  id        Int         @id @default(autoincrement())
+  user      User        @relation(fields: [userId], references: [id])
   userId    Int
-  createdAt DateTime @default(now())
+  status    PulseStatus @default(SAFE)
+  reachable Boolean?
+  message   String?
+  createdAt DateTime    @default(now())
 }
