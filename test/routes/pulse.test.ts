@@ -1,5 +1,5 @@
 import request from 'supertest'
-import { Prisma, PrismaClient, User } from '@prisma/client'
+import { Prisma, PrismaClient, Pulse, PulseStatus, User } from '@prisma/client'
 
 import app from '../../src/app'
 
@@ -159,22 +159,31 @@ describe('Pulse', () => {
       const user = await createUser()
       mockJwtTokenValidationTokenSuccess(user)
 
+      const PULSE_STATUS = PulseStatus.IN_DANGER
+      const PULSE_REACHABLE = false
+
       const url = `/api/pulses`
       const response = await request(app)
         .post(url)
         .set('Content-Type', 'application/json')
         .set('Authorization', 'fake token')
         .send({
-          status: 'IN_DANGER',
-          reachable: false,
+          status: PULSE_STATUS,
+          reachable: PULSE_REACHABLE,
         })
       expect(response.statusCode).toBe(201) // created
       expect(response.body.message).toMatch(/pulse/i)
       expect(response.body).toHaveProperty('pulse')
       const pulse = response.body.pulse
       expect(pulse).toHaveProperty('id')
-      expect(pulse.status).toBe('IN_DANGER')
-      expect(pulse.reachable).toBe(false)
+      expect(pulse.status).toBe(PULSE_STATUS)
+      expect(pulse.reachable).toBe(PULSE_REACHABLE)
+
+      const fetchedPulse = (await prisma.pulse.findFirst()) as Pulse
+      expect(fetchedPulse.id).toBe(pulse.id)
+      expect(fetchedPulse.userId).toBe(user.id)
+      expect(fetchedPulse.status).toBe(PULSE_STATUS)
+      expect(fetchedPulse.reachable).toBe(PULSE_REACHABLE)
     })
 
     it('should return an error when an invalid status is given', async () => {
