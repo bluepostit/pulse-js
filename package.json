@@ -8,13 +8,13 @@
     "dev": "dotenv -e .env.development -- ts-node src/index.ts",
     "dev:migrate": "dotenv -e .env.development -- npx prisma migrate dev --name",
     "dev:generate": "dotenv -e .env.development -- npx prisma generate",
-    "docker:up": "sudo docker-compose up -d",
-    "docker:down": "sudo docker-compose down",
+    "docker:up": "docker-compose up -d",
+    "docker:down": "docker-compose down",
     "test:migrate": "dotenv -e .env.test -- npx prisma migrate deploy",
-    "test:jest": "dotenv -e .env.test -- jest",
+    "test:jest": "dotenv -e .env.test -- jest --runInBand",
     "test:jest:watch": "dotenv -e .env.test -- jest --watch",
     "test:watch": "npm run docker:up && npm run test:migrate && npm run test:jest:watch",
-    "test": "npm run docker:up && npm run test:migrate && npm run test:jest"
+    "test": "npm run docker:up && npm run test:migrate && npm run test:jest && npm run docker:down"
   },
   "author": "",
   "license": "ISC",
