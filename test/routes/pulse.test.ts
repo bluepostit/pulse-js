@@ -5,6 +5,8 @@ import app from '../../src/app'
 
 const USER_EMAIL = 'test@test.test'
 const USER_PASSWORD = '123sail?999'
+const USER2_EMAIL = 'test2@test.test'
+const USER2_PASSWORD = USER_PASSWORD
 
 const prisma = new PrismaClient()
 
@@ -18,8 +20,6 @@ const cleanup = async () => {
 
 describe('Pulse', () => {
   describe('get pulses for user', () => {
-    let user: User
-
     beforeEach(async () => {
       await cleanup()
     })
@@ -29,7 +29,7 @@ describe('Pulse', () => {
     })
 
     const createUser = async () => {
-      user = await prisma.user.create({
+      return await prisma.user.create({
         data: {
           email: USER_EMAIL,
           password: USER_PASSWORD,
@@ -37,8 +37,48 @@ describe('Pulse', () => {
       })
     }
 
+    const createUserWithTwoPulses = async () => {
+      return await prisma.user.create({
+        data: {
+          email: USER_EMAIL,
+          password: USER_PASSWORD,
+          pulses: {
+            create: [{}, {}],
+          },
+        },
+      })
+    }
+
+    const createTwoUsersWithTwoPulsesEach = async () => {
+      const users: Prisma.UserCreateInput[] = [
+        {
+          email: USER_EMAIL,
+          password: USER_PASSWORD,
+          pulses: {
+            create: [{}, {}],
+          },
+        },
+        {
+          email: USER2_EMAIL,
+          password: USER2_PASSWORD,
+          pulses: {
+            create: [{}, {}],
+          },
+        },
+      ]
+
+      const createdUsers: User[] = await Promise.all(
+        users.map(async (user) => {
+          return await prisma.user.create({
+            data: user,
+          })
+        })
+      )
+      return createdUsers
+    }
+
     it('should return an empty array when no pulses exist', async () => {
-      await createUser()
+      const user = await createUser()
       const url = `/api/pulses/${user.id}`
       const response = await request(app)
         .get(url)
@@ -50,15 +90,16 @@ describe('Pulse', () => {
     })
 
     it("should return the user's pulses", async () => {
-      await prisma.user.create({
-        data: {
-          email: USER_EMAIL,
-          password: USER_PASSWORD,
-          pulses: {
-            create: [{}, {}],
-          },
-        },
-      })
+      const users = await createTwoUsersWithTwoPulsesEach()
+
+      const url = `/api/pulses/${users[0].id}`
+      const response = await request(app)
+        .get(url)
+        .set('Content-Type', 'application/json')
+        .send()
+      expect(response.statusCode).toBe(200)
+      expect(response.body.pulses).toBeInstanceOf(Array)
+      expect(response.body.pulses.length).toBe(2)
     })
   })
 })
